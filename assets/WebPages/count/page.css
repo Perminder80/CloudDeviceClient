@@ -1,0 +1,40 @@
+.button{
+	position:absolute;
+	text-align:center;
+	left:5%;
+	right:5%;
+	font-size: 200%;
+}
+
+* {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);  
+}
+
+.text{
+	position:absolute;
+	left:5%;
+	right:5%;
+	font-size: 200%
+}
+
+#countJava{
+	 background-color:red;
+	 top: 15%;
+	 bottom: 70%;
+}
+
+#countJS{
+	 background-color:yellow;
+	 top: 55%;
+	 bottom: 30%;
+}
+
+#textJava{
+	top: 5%;
+	 bottom: 80%;
+}
+
+#textJS{
+	top: 45%;
+	 bottom: 55%;
+}

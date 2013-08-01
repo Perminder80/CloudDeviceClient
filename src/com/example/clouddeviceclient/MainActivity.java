@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import com.example.test_webview.util.SystemUiHider;
-
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;

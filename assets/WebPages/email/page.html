@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+	<head>
+       	<title>Send an Email</title> 
+		<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+		<link rel="stylesheet" href="..\JQuerry\theme.css" />
+		<link rel="stylesheet" href="page.css" />
+		<script src="..\JQuerry\jquery.js"></script>
+		<script src="..\JQuerry\jquerym.js"></script>
+		<script src="page.js"></script>
+	</head>
+	<body>
+		<div data-role="page" id="rep">	
+			
+			<div data-theme="a" data-role="header">
+				<h3>
+					Send an Email
+				</h3>
+			</div>
+			
+			<div data-role="content">
+				<div data-role="fieldcontain">
+					<label for="textinput1">
+						To:
+					</label>
+					<input name="" id="textinput1" placeholder="" value="" type="text">
+				</div>
+				<div data-role="fieldcontain">
+					<label for="textinput2">
+						Topic:
+					</label>
+					<input name="" id="textinput2" placeholder="" value="" type="text">
+				</div>
+				<div data-role="fieldcontain">
+					<label for="textarea1">
+						Content
+					</label>
+					<textarea name="" id="textarea1" placeholder=""></textarea>
+				</div>
+				<a data-role="button" onclick="send();">
+					Send
+				</a>
+				<a data-role="button" onclick="autofill();">
+					Auto fill
+				</a>
+			</div>
+			
+		</div>
+	</body>
+</html>

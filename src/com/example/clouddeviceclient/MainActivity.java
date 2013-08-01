@@ -1,4 +1,4 @@
-package com.example.test_webview;
+package com.example.clouddeviceclient;
 import java.io.Console;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,7 +40,7 @@ import android.widget.Toast;
  * @see SystemUiHider
  */
 
-public class StartActivity extends Activity implements OnTouchListener{
+public class MainActivity extends Activity implements OnTouchListener{
 	
 	public static final int PICK_IMAGE = 1;
 	int count = 0;

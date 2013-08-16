@@ -7,16 +7,19 @@ import com.example.test_webview.util.SystemUiHider;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.PhoneLookup;
+import android.telephony.SmsManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.DragEvent;
@@ -25,27 +28,27 @@ import android.view.View;
 import android.view.View.OnDragListener;
 import android.view.View.OnTouchListener;
 import android.webkit.ConsoleMessage;
+import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-
 /**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- * 
- * @see SystemUiHider
- */
+* An example full-screen activity that shows and hides the system UI (i.e.
+* status bar and navigation/system bar) with user interaction.
+* 
+* @see SystemUiHider
+*/
 
-public class MainActivity extends Activity implements OnTouchListener{
+public class MainActivity extends Activity {
 	
 	public static final int PICK_IMAGE = 1;
 	int count = 0;
 	WebView myWebView;
 	DisplayMetrics displaymetrics;
-	
+	String imageFilePath;
 	
 	 public void onBackPressed (){
 
@@ -54,24 +57,65 @@ public class MainActivity extends Activity implements OnTouchListener{
         }
         else{
         	finish();
+        
         }
 	   }
+	 	
+	 
 	@SuppressLint("SetJavaScriptEnabled")
-	
 	protected void onCreate(Bundle savedInstanceState) {
 		displaymetrics = new DisplayMetrics();
 		Log.d("Start","OK");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_start);
 		myWebView = (WebView) findViewById(R.id.webview);
-		myWebView.setOnTouchListener(this);
 		myWebView.setWebChromeClient(new HelloWebViewClient());
 		myWebView.getSettings().setJavaScriptEnabled(true);
 		myWebView.addJavascriptInterface(new WebAppInterface(), "JSInterface");
-		myWebView.loadUrl("file:///android_asset/WebPages/menu.html");
+		
+		myWebView.getSettings().setAllowFileAccessFromFileURLs(true);
+		myWebView.getSettings().setAllowUniversalAccessFromFileURLs(true);
+		myWebView.getSettings().setBlockNetworkLoads(false);
+		myWebView.getSettings().setAllowContentAccess(true);
+		
+		
+		CookieManager cookieManager = CookieManager.getInstance();
+		CookieManager.setAcceptFileSchemeCookies(true);
+		cookieManager.setAcceptCookie(true);
+		Intent intent = getIntent();
+		String action = intent.getAction();
+
+		
+		if (Intent.ACTION_SEND.equals(action))
+	    {
+			myWebView.loadUrl("file:///android_asset/WebPages/share/page.html");
+            try
+            {
+            	Bundle extras = intent.getExtras();
+
+            	// Get resource path from intent callee
+                Uri _uri = (Uri) extras.getParcelable(Intent.EXTRA_STREAM);
+
+                Cursor cursor = getContentResolver().query(_uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
+    	        cursor.moveToFirst();
+    	        
+    	        //Link to the image
+    	        imageFilePath = cursor.getString(0);
+    	 
+    	
+    	        cursor.close();
+            } catch (Exception e)
+            {
+                Log.e(this.getClass().getName(), e.toString());
+            }
+
+	    }else{
+	    	myWebView.loadUrl("file:///android_asset/WebPages/launch.html");
+	    }
 		
 	}
 
+	
 	private class HelloWebViewClient extends WebChromeClient {
 	    
 		public boolean onConsoleMessage(ConsoleMessage cm) {
@@ -87,17 +131,16 @@ public class MainActivity extends Activity implements OnTouchListener{
 
 	    WebAppInterface() {
 	    }
+	    
+	   
 	    @JavascriptInterface
-	    public String addadd() {
-	        Log.d("ok","ok");
-	        count++;
-	        return ""+count;
+	    public void shareimg()
+	    {
+	    	myWebView.loadUrl("javascript:(function() { " +  
+                "selectedimg(\""+imageFilePath+"\")"+  
+                "})()");  
 	    }
-	    @JavascriptInterface
-	    public String get(){
-	    	return ""+count; 
-	    }
-	 
+	    
 	    @JavascriptInterface
 	    public String img()
 	    {
@@ -127,6 +170,25 @@ public class MainActivity extends Activity implements OnTouchListener{
 	    	}
 	    	
 		    return "OK";
+	    }
+	    
+	 
+	  
+	   
+	    @JavascriptInterface
+	    public String sendSMS(String to, String content)
+	    {
+	    	sendASMS(to,content);
+	    	return "ok";
+	    }
+	  
+	   
+	    private void sendASMS(String phoneNumber, String message)
+	    {
+	        SmsManager sms = SmsManager.getDefault();
+	        PendingIntent t = PendingIntent.getActivity(MainActivity.this, 0,new Intent(), 0);
+	        sms.sendTextMessage(phoneNumber, null, message, t, null);
+	        
 	    }
 		   
 	    @JavascriptInterface
@@ -203,7 +265,6 @@ public class MainActivity extends Activity implements OnTouchListener{
 	        
 	        //Link to the image
 	        final String imageFilePath = cursor.getString(0);	       
-	        Log.d("bla","bla");
 	        myWebView.loadUrl("javascript:(function() { " +  
 	                "imgok(\""+imageFilePath+"\")"+  
 	                "})()");  
@@ -214,9 +275,9 @@ public class MainActivity extends Activity implements OnTouchListener{
 	    super.onActivityResult(requestCode, resultCode, data);
 	}
 
-	@Override
+	/*@Override
 	public boolean onTouch(View arg0, MotionEvent arg1) {
-		/*
+		
 		//float x = arg1.getX()/displaymetrics.widthPixels;
 		//float y = arg1.getY()/displaymetrics.heightPixels;
 		float x = arg1.getX();
@@ -235,7 +296,7 @@ public class MainActivity extends Activity implements OnTouchListener{
 	                "touchMove(" + x + ","+y+")"+  
 	                "})()");  
 		}
-		*/
+		
 		return false;
-	}
+	}*/
 }

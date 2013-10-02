@@ -1,0 +1,10 @@
+#launch {
+    display: block;
+    margin: 1em auto 0;
+    width: 60%;
+}
+#launchIcon {
+    display: block;
+    margin: 1em auto 0;
+    width: 40%;
+}

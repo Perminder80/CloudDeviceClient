@@ -16,36 +16,44 @@
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);  
 }
 
-#count{
+#contacts{
     background-color:red;
 	left:5%;
 	right:5%;
 	top:5%;
-	bottom:80%;
+	bottom:85%;
 }
 
-#animate{
+#picture{
     background-color:yellow;
 	left:5%;
 	right:5%;
 	top:25%;
-	bottom:60%;
+	bottom:65%;
 }
 
-#autre2{
+#email{
     background-color:green;
 	left:5%;
 	right:5%;
 	top:45%;
-	bottom:40%;
+	bottom:45%;
 }
 
-#dragAndDrop{
+#sms{
     background-color:blue;
 	left:5%;
 	right:5%;
 	top:65%;
-	bottom:20%;
+	bottom:25%;
+}
+
+#cloud{
+    background-color: maroon;
+	left:5%;
+	right:5%;
+	top:85%;
+	bottom:5%;
 }
 
 #sms{

@@ -1,22 +1,25 @@
-package com.example.test_webview;
+package com.example.clouddeviceclient;
 import java.io.Console;
 import java.util.ArrayList;
 import java.util.HashSet;
 
 import com.example.test_webview.util.SystemUiHider;
-
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.PhoneLookup;
+import android.telephony.SmsManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.DragEvent;
@@ -25,26 +28,27 @@ import android.view.View;
 import android.view.View.OnDragListener;
 import android.view.View.OnTouchListener;
 import android.webkit.ConsoleMessage;
+import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-
 /**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- * 
- * @see SystemUiHider
- */
+* An example full-screen activity that shows and hides the system UI (i.e.
+* status bar and navigation/system bar) with user interaction.
+* 
+* @see SystemUiHider
+*/
 
-public class StartActivity extends Activity implements OnTouchListener{
+public class MainActivity extends Activity {
 	
+	public static final int PICK_IMAGE = 1;
 	int count = 0;
 	WebView myWebView;
 	DisplayMetrics displaymetrics;
-	
+	String imageFilePath;
 	
 	 public void onBackPressed (){
 
@@ -53,24 +57,65 @@ public class StartActivity extends Activity implements OnTouchListener{
         }
         else{
         	finish();
+        
         }
 	   }
+	 	
+	 
 	@SuppressLint("SetJavaScriptEnabled")
-	
 	protected void onCreate(Bundle savedInstanceState) {
 		displaymetrics = new DisplayMetrics();
 		Log.d("Start","OK");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_start);
 		myWebView = (WebView) findViewById(R.id.webview);
-		myWebView.setOnTouchListener(this);
 		myWebView.setWebChromeClient(new HelloWebViewClient());
 		myWebView.getSettings().setJavaScriptEnabled(true);
 		myWebView.addJavascriptInterface(new WebAppInterface(), "JSInterface");
-		myWebView.loadUrl("file:///android_asset/WebPages/menu.html");
+		
+		myWebView.getSettings().setAllowFileAccessFromFileURLs(true);
+		myWebView.getSettings().setAllowUniversalAccessFromFileURLs(true);
+		myWebView.getSettings().setBlockNetworkLoads(false);
+		myWebView.getSettings().setAllowContentAccess(true);
+		
+		
+		CookieManager cookieManager = CookieManager.getInstance();
+		CookieManager.setAcceptFileSchemeCookies(true);
+		cookieManager.setAcceptCookie(true);
+		Intent intent = getIntent();
+		String action = intent.getAction();
+
+		
+		if (Intent.ACTION_SEND.equals(action))
+	    {
+			myWebView.loadUrl("file:///android_asset/WebPages/share/page.html");
+            try
+            {
+            	Bundle extras = intent.getExtras();
+
+            	// Get resource path from intent callee
+                Uri _uri = (Uri) extras.getParcelable(Intent.EXTRA_STREAM);
+
+                Cursor cursor = getContentResolver().query(_uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
+    	        cursor.moveToFirst();
+    	        
+    	        //Link to the image
+    	        imageFilePath = cursor.getString(0);
+    	 
+    	
+    	        cursor.close();
+            } catch (Exception e)
+            {
+                Log.e(this.getClass().getName(), e.toString());
+            }
+
+	    }else{
+	    	myWebView.loadUrl("file:///android_asset/WebPages/launch.html");
+	    }
 		
 	}
 
+	
 	private class HelloWebViewClient extends WebChromeClient {
 	    
 		public boolean onConsoleMessage(ConsoleMessage cm) {
@@ -86,21 +131,70 @@ public class StartActivity extends Activity implements OnTouchListener{
 
 	    WebAppInterface() {
 	    }
+	    
+	   
 	    @JavascriptInterface
-	    public String addadd() {
-	        Log.d("ok","ok");
-	        count++;
-	        return ""+count;
+	    public void shareimg()
+	    {
+	    	myWebView.loadUrl("javascript:(function() { " +  
+                "selectedimg(\""+imageFilePath+"\")"+  
+                "})()");  
 	    }
+	    
 	    @JavascriptInterface
-	    public String get(){
-	    	return ""+count; 
+	    public String img()
+	    {
+	    	
+	    	Log.d("ok","ok");
+	    	Intent intent = new Intent();
+		    intent.setType("image/*");
+		    intent.setAction(Intent.ACTION_GET_CONTENT);
+		    startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
+		    
+		    return "";
 	    }
+	    
+	    @JavascriptInterface
+	    public String sendEmail(String to, String topic,String content)
+	    {
+	    	
+	    	Intent i = new Intent(Intent.ACTION_SEND);
+	    	i.setType("message/rfc822");
+	    	i.putExtra(Intent.EXTRA_EMAIL  , new String[]{to});
+	    	i.putExtra(Intent.EXTRA_SUBJECT, topic);
+	    	i.putExtra(Intent.EXTRA_TEXT   , content);
+	    	try {
+	    	    startActivity(Intent.createChooser(i, "Send mail..."));
+	    	} catch (android.content.ActivityNotFoundException ex) {
+	    	    return "NO_CLIENT";
+	    	}
+	    	
+		    return "OK";
+	    }
+	    
 	 
+	  
+	   
+	    @JavascriptInterface
+	    public String sendSMS(String to, String content)
+	    {
+	    	sendASMS(to,content);
+	    	return "ok";
+	    }
+	  
+	   
+	    private void sendASMS(String phoneNumber, String message)
+	    {
+	        SmsManager sms = SmsManager.getDefault();
+	        PendingIntent t = PendingIntent.getActivity(MainActivity.this, 0,new Intent(), 0);
+	        sms.sendTextMessage(phoneNumber, null, message, t, null);
+	        
+	    }
+		   
 	    @JavascriptInterface
 	    public String rep()
 	    {
-	  
+	
 	    	String res = "{\"contacts\":[";
 	    	Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI,null, null, null, null); 
 		    boolean f = true;
@@ -110,7 +204,6 @@ public class StartActivity extends Activity implements OnTouchListener{
 			 		}else{
 			 			res = res+",";
 			 		}
-	
 	    		String contactId = cursor.getString(cursor.getColumnIndex( 
 		       ContactsContract.Contacts._ID)); 
 		       String contactName = cursor.getString(cursor.getColumnIndex( 
@@ -159,96 +252,32 @@ public class StartActivity extends Activity implements OnTouchListener{
 		    return res;
 	    }
 	  
-	    
-	   /* 
-	    @JavascriptInterface
-	    public String rep3(){
-	    	String res = "";
-	    	ContentResolver cr = getContentResolver();
-	        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
-	                null, null, null, null);
-	        if (cur.getCount() > 0) {
-			    while (cur.moveToNext()) {
-				        String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
-					String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-					res = res + name;
-			 		if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-			 			 Cursor pCur = cr.query(
-			 		 		    ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?", new String[]{id}, null);
-			 		 	        while (pCur.moveToNext()) {
-			 		 		    String phone = pCur.getString( pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-			 		 		    res = res +"BALISEENDL"+ "    "+phone;
-			 		 	        } 
-			 		 	        pCur.close();
-			 	    }
-			 		//if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS))) > 0) {
-			 			 //Cursor pCur = cr.query(
-			 		 		    //ContactsContract.CommonDataKinds.Email.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?", new String[]{id}, null);
-			 		 	        //while (pCur.moveToNext()) {
-			 		 		    //String email = pCur.getString( pCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS));
-			 		 		    //res = res +"BALISEENDL"+ "    "+email;
-			 		 	        //} 
-			 		 	        //pCur.close();
-			 	    //}
-			 		//String email = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS));
-			 		res = res + "BALISEENDLBALISEENDL";
-		           }
-	        }
-	    	Log.d("bla", res);
-	    	return res;
-	    }
-	    
-	    @JavascriptInterface
-	    public String rep2(){
-	    	ArrayList<String> emlRecs = new ArrayList<String>();
-	        HashSet<String> emlRecsHS = new HashSet<String>();
-	        ContentResolver cr = getContentResolver();
-	        String[] PROJECTION = new String[] { ContactsContract.RawContacts._ID, 
-	                ContactsContract.Contacts.DISPLAY_NAME,
-	                ContactsContract.Contacts.PHOTO_ID,
-	                ContactsContract.CommonDataKinds.Phone.NUMBER, 
-	                ContactsContract.CommonDataKinds.Photo.CONTACT_ID,
-	                ContactsContract.CommonDataKinds.Email.ADDRESS
-	                };
-	        //String order = "CASE WHEN " 
-	        //       + ContactsContract.Contacts.DISPLAY_NAME 
-	                //+ " NOT LIKE '%@%' THEN 1 ELSE 2 END, " 
-	        //        + ContactsContract.Contacts.DISPLAY_NAME 
-	                //+ ", " 
-	        //        + ContactsContract.CommonDataKinds.Email.DISPLAY_NAME
-	        //        + " COLLATE NOCASE";
-	        String filter = ContactsContract.CommonDataKinds.Email.DATA + " NOT LIKE ''";
-	        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, PROJECTION, null, null, null);
-	        if (cur.moveToFirst()) {
-	            do {
-	                // names comes in hand sometimes
-	               // if(cur.getString(1)!=null){
-		            	String a = cur.getString(0);
-		                String b = cur.getString(1);
-		                String c = cur.getString(2);
-		                String d = cur.getString(3);
-		                String e = cur.getString(4);
-		                String f = cur.getString(5);
-		                // keep unique only
-		                if (a != null) {
-		                    emlRecs.add(a+" "+b+" "+c+" "+d+" "+e+" "+f+"  OK"+"BALISEENDL");
-		                }
-	                //}
-	            } while (cur.moveToNext());
-	        }
-
-	        cur.close();
-	        String res = "";
-	        int s = emlRecs.size();
-	        for(int j = 0; j<s;j++){
-	        	res = res + emlRecs.get(j);
-	        }
-	        return res;
-	    }*/
-	}
+	}      
 
 	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	    if(requestCode == PICK_IMAGE && data != null && data.getData() != null) {
+	        Uri _uri = data.getData();
+
+	        //User had pick an image.
+	        Cursor cursor = getContentResolver().query(_uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
+	        cursor.moveToFirst();
+	        
+	        //Link to the image
+	        final String imageFilePath = cursor.getString(0);	       
+	        myWebView.loadUrl("javascript:(function() { " +  
+	                "imgok(\""+imageFilePath+"\")"+  
+	                "})()");  
+	  
+	        cursor.close();
+	    }
+	    
+	    super.onActivityResult(requestCode, resultCode, data);
+	}
+
+	/*@Override
 	public boolean onTouch(View arg0, MotionEvent arg1) {
+		
 		//float x = arg1.getX()/displaymetrics.widthPixels;
 		//float y = arg1.getY()/displaymetrics.heightPixels;
 		float x = arg1.getX();
@@ -269,5 +298,5 @@ public class StartActivity extends Activity implements OnTouchListener{
 		}
 		
 		return false;
-	}
+	}*/
 }

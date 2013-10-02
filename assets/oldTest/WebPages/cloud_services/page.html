@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+	<head>
+       	<title>Picture</title> 
+		<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+		<link rel="stylesheet" href="..\JQuerry\theme.css" />
+		<link rel="stylesheet" href="page.css" />
+		<script src="..\JQuerry\jquery.js"></script>
+		<script src="..\JQuerry\jquerym.js"></script>
+		<script src="..\JQuerry\jquery-cookie.js"></script>
+		<script src="page.js"></script>
+	</head>
+	<body>
+		<div id="fb-root"></div>
+		<script>
+		  window.fbAsyncInit = function() {
+			// init the FB JS SDK
+			FB.init({
+			  appId      : '426461994133349',                        // App ID from the app dashboard
+			  status     : true,                                 // Check Facebook Login status
+			  xfbml      : true                                  // Look for social plugins on the page
+			});
+			console.log("OKOKOK");
+			// Additional initialization code such as adding Event Listeners goes here
+			FB.login(function(response) {
+			   if (response.authResponse) {
+				 console.log('Welcome!  Fetching your information.... ');
+				 FB.api('/me', function(response) {
+				   console.log('Good to see you, ' + response.name + '.');
+				 });
+			   } else {
+				 console.log('User cancelled login or did not fully authorize.');
+			   }
+			 });
+		  };
+
+		  // Load the SDK asynchronously
+		  (function(d, s, id){
+			 var js, fjs = d.getElementsByTagName(s)[0];
+			 if (d.getElementById(id)) {return;}
+			 js = d.createElement(s); js.id = id;
+			 js.src = "//connect.facebook.net/en_US/all.js";
+			 fjs.parentNode.insertBefore(js, fjs);
+		   }(document, 'script', 'facebook-jssdk'));
+		</script>
+		<div data-role="page" id="cloud">	
+					
+			<div data-theme="a" data-role="header">
+				<h3>
+					Connect
+				</h3>
+			</div>
+			<div data-role="content">
+				<h2>
+					Facebook:
+				</h2>
+				<h5 id="FBstatus">
+					disconnected
+				</h5>
+				<a data-role="button" onclick="FBbutton();" id="FBbutton">
+					connect
+				</a>
+				<h2>
+					Linkedin:
+				</h2>
+				<h5 id="LDstatus">
+					disconnected
+				</h5>
+				<a data-role="button" onclick="LDbutton();" id="LDbutton">
+					connect
+				</a>
+				<h2>
+					DropBox:
+				</h2>
+				<h5 id = "DBstatus">
+					disconnected
+				</h5>
+				<a data-role="button" onclick="DBbutton();" id="DBbutton">
+					connect
+				</a>
+				<h2>
+					SkyDrive:
+				</h2>
+				<h5 id = "SDstatus">
+					disconnected
+				</h5>
+				<a data-role="button" onclick="SDbutton();" id="SDbutton">
+					connect
+				</a>
+			</div>	
+		<div class="fb-like" data-send="true" data-width="450" data-show-faces="true"></div>			
+		</div>
+	</body>
+</html>

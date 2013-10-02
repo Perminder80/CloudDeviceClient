@@ -3,7 +3,7 @@ var repertory = function(){
 
 	$.mobile.loading( 'show', {text: "retrieving contacts", textVisible: true, textonly: false });
 	
-	setTimeout(repert,1);
+	setTimeout(repert,10);
 };
 
 var repert = function(){
@@ -11,7 +11,7 @@ var repert = function(){
 	//test
 	//var JSONrep = {"contacts":[{"Name":"fabien","Visible":1,"Number":["bla","bli"],"Email":["bla"]},{"Name":"benoit","Visible":1,"Number":["bli"],"Email":["blo"]}]};
 	var rep = JSInterface.rep();
-	console.log(rep);
+	//console.log(rep);
 	var JSONrep = JSON.parse(rep);
 
 	var domForm = createDom(JSONrep);
@@ -40,7 +40,7 @@ var createDom = function(JSONrep){
 		if( nbNumber + nbMail > 0){
 		
 			if(JSONrep.contacts[i].Visible == true){
-				DOM = DOM +'<div  data-role="collapsible" data-inset ="false" ><h2>'+JSONrep.contacts[i].Name+JSONrep.contacts[i].Visible+'</h2><fieldset data-role="controlgroup">'
+				DOM = DOM +'<div  data-role="collapsible" data-inset ="false" id="test1" ><h2>'+JSONrep.contacts[i].Name+'</h2><fieldset data-role="controlgroup" id="test2">'
 				
 				console.log(nbNumber+"  "+nbMail);
 				
@@ -57,7 +57,7 @@ var createDom = function(JSONrep){
 	}
 	
 	DOM = DOM + "</div>"
-	console.log(DOM);
+	//console.log(DOM);
 	return DOM;
 
 };

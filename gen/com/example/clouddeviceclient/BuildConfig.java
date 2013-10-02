@@ -1,5 +1,5 @@
 /** Automatically generated file. DO NOT MODIFY */
-package com.example.test_webview;
+package com.example.clouddeviceclient;
 
 public final class BuildConfig {
     public final static boolean DEBUG = true;
